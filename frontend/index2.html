@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Master Contact CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="icon" href="data:," />
+    
+    <style>
+      :root {
+        --primary: #ef4444;
+        --primary-light: #fca5a5;
+        --bg-light: #fee2e2;
+        --white: #ffffff;
+        --text-dark: #1f2937;
+        --text-light: #4b5563;
+        --shadow: rgba(0, 0, 0, 0.1);
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: "Poppins", sans-serif; background: var(--bg-light); min-height: 100vh; color: var(--text-dark); display: flex; }
+
+      /* SIDEBAR & MAIN LAYOUT (unchanged) */
+      .sidebar { width: 250px; background: linear-gradient(180deg, var(--primary-light), var(--bg-light)); padding: 40px 20px; box-shadow: 4px 0 20px var(--shadow); position: fixed; height: 100vh; overflow-y: auto; z-index: 10; }
+      .sidebar h2 { color: var(--primary); font-size: 1.8rem; margin-bottom: 40px; text-align: center; }
+      .sidebar ul { list-style: none; }
+      .sidebar li { margin-bottom: 15px; padding: 15px 20px; border-radius: 12px; cursor: pointer; transition: all 0.3s ease; font-weight: 500; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+      .sidebar li:hover { background: var(--primary); color: white; transform: translateX(5px); }
+      .sidebar li.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(239,68,68,0.3); }
+
+      .main-container { flex: 1; margin-left: 250px; padding: 40px; background: white; min-height: 100vh; }
+
+      /* TERA PURA PURANA CSS (form, table, etc.) YAHAN RAHEGA - SAB SAME */
+
+      /* YE HAI FINAL MODAL CSS - SABSE CLEAN AUR WORKING */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.75);
+        backdrop-filter: blur(10px);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .modal {
+        background: white;
+        border-radius: 28px;
+        width: 100%;
+        max-width: 1000px;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 40px;
+        box-shadow: 0 30px 80px rgba(239,68,68,0.4);
+        animation: pop 0.4s ease-out;
+      }
+
+      @keyframes pop {
+        from { transform: scale(0.9); opacity: 0; }
+        to   { transform: scale(1); opacity: 1; }
+      }
+
+      .modal-header {
+        { font-size: 2.2rem; font-weight: 700; color: var(--primary); text-align: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 3px solid var(--primary-light); }
+      .modal-grid             { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+      .modal-group label      { font-weight: 600; margin-bottom: 8px; color: #1f2937; }
+      .modal-group input,
+      .modal-group select,
+      .modal-group textarea   { padding: 16px; border: 2.5px solid var(--primary-light); border-radius: 16px; background: #fff5f5; font-size: 1.05rem; }
+      .modal-group input:focus,
+      .modal-group select:focus,
+      .modal-group textarea:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 5px rgba(239,68,68,0.2); }
+
+      .modal-actions {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-top: 40px;
+        padding-top: 30px;
+        border-top: 2px solid var(--primary-light);
+      }
+
+      .modal-btn {
+        padding: 18px 50px;
+        border: none;
+        border-radius: 50px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        cursor: pointer;
+        min-width: 180px;
+      }
+
+      .cancel-btn { background: #6b7280; color: white; }
+      .update-btn { background: var(--primary); color: white; box-shadow: 0 10px 30px rgba(239,68,68,0.4); }
+      .update-btn:hover { transform: translateY(-5px); }
+
+      /* Beautiful scrollbar */
+      .modal::-webkit-scrollbar { width: 10px; }
+      .modal::-webkit-scrollbar-track { background: #fee2e2; border-radius: 10px; }
+      .modal::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+    </style>
+  </head>
+  <body>
+    <!-- TERA PURA SIDEBAR + MAIN CONTENT (home, form, history) SAME RAHEGA -->
+
+    <!-- YE MODAL BODY KE BILKUL END MEIN DAALNA HAI -->
+    <div class="modal-overlay" id="editModal">
+      <div class="modal">
+        <div class="modal-header">Edit Contact</div>
+        <form id="editForm">
+          <div class="modal-grid">
+            <!-- SAARI FIELDS WAHI JO PEHLE THI -->
+            <div class="modal-group"><label>Company Name *</label><input type="text" name="company_name" required /></div>
+            <div class="modal-group"><label>Name *</label><input type="text" name="name" required /></div>
+            <div class="modal-group"><label>Designation *</label><input type="text" name="designation" required /></div>
+            <div class="modal-group"><label>Mobile *</label><input type="tel" name="mobile" required /></div>
+            <div class="modal-group"><label>Mobile 2</label><input type="tel" name="mobile2" /></div>
+            <div class="modal-group"><label>Landline</label><input type="tel" name="landline" /></div>
+            <div class="modal-group"><label>Email *</label><input type="email" name="email" required /></div>
+            <div class="modal-group"><label>Email 2</label><input type="email" name="email2" /></div>
+            <div class="modal-group"><label>LinkedIn</label><input type="url" name="linkedin" /></div>
+            <div class="modal-group" style="grid-column: 1 / -1;"><label>Address *</label><textarea name="address" rows="4" required></textarea></div>
+            <div class="modal-group"><label>Existing Client? *</label>
+              <select name="existing_client" required>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+            <div class="modal-group"><label>Partner Name</label><input type="text" name="partner_name" /></div>
+            <div class="modal-group"><label>Call Date *</label><input type="date" name="call_date" required /></div>
+            <div class="modal-group"><label>Lead Entry Date *</label><input type="date" name="lead_entry_date" required /></div>
+            <div class="modal-group"><label>Disposition *</label>
+              <select name="disposition" required>
+                <option>Whatsapp Sent</option><option>Call DC by customer</option><option>Short HangUp</option>
+                <option>Call Ringing</option><option>Call Back</option><option>Follow Up</option>
+                <option>Hot Lead</option><option>Future Prospect</option><option>DND</option>
+              </select>
+            </div>
+            <div class="modal-group" style="grid-column: 1 / -1;"><label>Comments</label><textarea name="comments" rows="4"></textarea></div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="modal-btn cancel-btn" id="cancelEdit">Cancel</button>
+            <button type="submit" class="modal-btn update-btn">Update</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- YE SCRIPT SABSE END MEIN — MODAL KE BAAD -->
+    <script>
+      const editModal = document.getElementById("editModal");
+      const editForm = document.getElementById("editForm");
+      const cancelEdit = document.getElementById("cancelEdit");
+      let currentEditId = null;
+
+      window.editContact = async function(id) {
+        try {
+          const res = await fetch(`http://127.0.0.1:8000/get_contact/${id}`);
+          const data = await res.json();
+
+          // Fill all fields
+          Object.keys(data).forEach(key => {
+            const field = editForm.elements[key];
+            if (field) {
+              if (key === "call_date" || key === "lead_entry_date") {
+                field.value = data[key] ? data[key].slice(0,10) : "";
+              } else {
+                field.value = data[key] || "";
+              }
+            }
+          });
+
+          currentEditId = id;
+          editModal.style.display = "flex";  // bas ye line kaafi hai
+
+        } catch (err) {
+          alert("Error loading contact");
+        }
+      };
+
+      cancelEdit.onclick = () => {
+        editModal.style.display = "none";
+        editForm.reset();
+      };
+
+      editModal.onclick = (e) => {
+        if (e.target === editModal) cancelEdit.click();
+      };
+
+      editForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const updates = Object.fromEntries(new FormData(editForm));
+        await fetch(`http://127.0.0.1:8000/update/${currentEditId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updates)
+        });
+        editModal.style.display = "none";
+        loadHistory(currentPage);
+        alert("Updated successfully!");
+      };
+    </script>
+  </body>
+</html>

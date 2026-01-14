@@ -1,0 +1,30 @@
+name: 🏗️ Build & Push CRM Image
+
+on:
+  push:
+    branches: ["main", "staging"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        run: |
+          echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build & Push Image
+        run: |
+          IMAGE_NAME=ghcr.io/jhsassociatesllp/crm-app
+
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            TAG="production"
+          else
+            TAG="staging"
+          fi
+
+          docker build -t $IMAGE_NAME:$TAG .
+          docker push $IMAGE_NAME:$TAG

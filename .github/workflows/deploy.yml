@@ -1,0 +1,55 @@
+name: 🚀 Deploy CRM APP
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SERVER_KEY }}
+
+      - name: Deploy to Server
+        run: |
+          BRANCH=${GITHUB_REF_NAME}
+
+          if [ "$BRANCH" = "main" ]; then
+            TAG="production"
+            APP_NAME="crm_app_production"
+            PORT=8030
+          else
+            TAG="staging"
+            APP_NAME="crm_app_staging"
+            PORT=8029
+          fi
+
+          IMAGE="ghcr.io/jhsassociatesllp/crm-app:$TAG"
+
+          ssh -p 2232 -o StrictHostKeyChecking=no \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "
+
+              echo '${{ secrets.GHCR_PAT }}' | docker login ghcr.io -u '${{ secrets.GH_USERNAME }}' --password-stdin
+
+              docker pull $IMAGE || exit 1
+
+              docker stop $APP_NAME || true
+              docker rm $APP_NAME || true
+
+              docker run -d \
+                --name $APP_NAME \
+                --restart unless-stopped \
+                -p $PORT:8000 \
+                -e APP_ENV=$TAG \
+                -e MONGODB_URL='${{ secrets.MONGODB_URL }}' \
+                -e DB_NAME='CRM' \
+                $IMAGE
+
+              docker image prune -f
+            "
